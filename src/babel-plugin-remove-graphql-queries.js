@@ -34,8 +34,8 @@ class StringInterpolationNotAllowedError extends Error {
   constructor(interpolationStart, interpolationEnd) {
     super(
       `BabelPluginRemoveGraphQLQueries: String interpolations are not allowed in graphql ` +
-        `fragments. Included fragments should be referenced ` +
-        `as \`...MyModule_foo\`.`
+      `fragments. Included fragments should be referenced ` +
+      `as \`...MyModule_foo\`.`
     )
     this.interpolationStart = JSON.parse(JSON.stringify(interpolationStart))
     this.interpolationEnd = JSON.parse(JSON.stringify(interpolationEnd))
@@ -163,7 +163,8 @@ function getGraphQLTag(path) {
   }
 
   const text = quasis[0].value.raw
-  const hash = murmurhash(text, `abc`)
+  const normalizedText = graphql.stripIgnoredCharacters(text);
+  const hash = murmurhash(normalizedText, `abc`);
 
   try {
     const ast = graphql.parse(text)
@@ -171,7 +172,7 @@ function getGraphQLTag(path) {
     if (ast.definitions.length === 0) {
       throw new EmptyGraphQLTagError(quasis[0].loc)
     }
-    return { ast, text, hash, isGlobal }
+    return { ast, text: normalizedText, hash, isGlobal }
   } catch (err) {
     throw new GraphQLSyntaxError(text, err, quasis[0].loc)
   }
@@ -190,7 +191,7 @@ function isUseStaticQuery(path) {
   )
 }
 
-export default function({ types: t }) {
+export default function ({ types: t }) {
   return {
     visitor: {
       Program(path, state) {
@@ -222,9 +223,9 @@ export default function({ types: t }) {
                 t.stringLiteral(
                   filename
                     ? nodePath.relative(
-                        nodePath.parse(filename).dir,
-                        resultPath
-                      )
+                      nodePath.parse(filename).dir,
+                      resultPath
+                    )
                     : shortResultPath
                 )
               )
@@ -282,9 +283,9 @@ export default function({ types: t }) {
                 t.stringLiteral(
                   filename
                     ? nodePath.relative(
-                        nodePath.parse(filename).dir,
-                        resultPath
-                      )
+                      nodePath.parse(filename).dir,
+                      resultPath
+                    )
                     : shortResultPath
                 )
               )
@@ -367,7 +368,7 @@ export default function({ types: t }) {
                           if (
                             varPath.node.id.name === varName &&
                             varPath.node.init.type ===
-                              `TaggedTemplateExpression`
+                            `TaggedTemplateExpression`
                           ) {
                             varPath.traverse({
                               TaggedTemplateExpression(templatePath) {
